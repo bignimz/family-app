@@ -1,22 +1,34 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
-function AddMemberModal({ parentMemberId, onClose, setFamilyMembers }) {
+function UpdateMemberModal({ member, onClose, onUpdateMember }) {
   const [name, setName] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
   const [gender, setGender] = useState("");
-  const [relationship, setRelationship] = useState("");
-  const [isAlive, setIsAlive] = useState("");
-  const [dateOfDeath, setDateOfDeath] = useState("");
+  const [isAlive, setIsAlive] = useState(true);
+  const [dateOfDeath, setDateOfDeath] = useState(null);
   const [placeOfBirth, setPlaceOfBirth] = useState("");
   const [occupation, setOccupation] = useState("");
   const [biographicalInformation, setBiographicalInformation] = useState("");
 
-  const handleSave = async () => {
+  useEffect(() => {
+    if (member) {
+      setName(member.name || "");
+      setDateOfBirth(member.date_of_birth || "");
+      setGender(member.gender || "");
+      setIsAlive(member.is_alive || true);
+      setDateOfDeath(member.date_of_death || null);
+      setPlaceOfBirth(member.place_of_birth || "");
+      setOccupation(member.occupation || "");
+      setBiographicalInformation(member.biographical_information || "");
+    }
+  }, [member]);
+
+  const handleUpdate = async () => {
     try {
       const response = await fetch(
-        "http://localhost:8000/api/family-members/add/",
+        `http://localhost:8000/api/family-members/${member.id}/update/`,
         {
-          method: "POST",
+          method: "PUT",
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${localStorage.getItem("token")}`,
@@ -25,29 +37,20 @@ function AddMemberModal({ parentMemberId, onClose, setFamilyMembers }) {
             name,
             date_of_birth: dateOfBirth,
             gender,
-            relationship,
             is_alive: isAlive,
-            date_of_death: isAlive ? null : dateOfDeath,
+            date_of_death: dateOfDeath,
             place_of_birth: placeOfBirth,
             occupation,
             biographical_information: biographicalInformation,
-            parent_member_id: parentMemberId,
           }),
         }
       );
       if (response.ok) {
-        const updatedResponse = await fetch(
-          "http://localhost:8000/api/family-members"
-        );
-        if (updatedResponse.ok) {
-          const updatedData = await updatedResponse.json();
-          setFamilyMembers(updatedData);
-          onClose();
-        } else {
-          throw new Error("Failed to fetch updated family members");
-        }
+        const updatedMember = await response.json(); // Get the updated member data
+        onUpdateMember(updatedMember); // Pass the updated member data to the onUpdateMember function
+        onClose();
       } else {
-        throw new Error("Error adding family member");
+        throw new Error("Error updating family member");
       }
     } catch (error) {
       console.error("Error:", error);
@@ -56,7 +59,7 @@ function AddMemberModal({ parentMemberId, onClose, setFamilyMembers }) {
 
   return (
     <div className="modal">
-      <h2>Add Family Member</h2>
+      <h2>Update Family Member</h2>
       <label>Name:</label>
       <input
         type="text"
@@ -75,14 +78,6 @@ function AddMemberModal({ parentMemberId, onClose, setFamilyMembers }) {
         value={gender}
         onChange={(e) => setGender(e.target.value)}
       />
-      <label>Relationship:</label>
-      <select
-        value={relationship}
-        onChange={(e) => setRelationship(e.target.value)}
-      >
-        <option value="Child">Child</option>
-        <option value="Spouse">Spouse</option>
-      </select>
       <label>Is Alive:</label>
       <input
         type="checkbox"
@@ -116,10 +111,10 @@ function AddMemberModal({ parentMemberId, onClose, setFamilyMembers }) {
         value={biographicalInformation}
         onChange={(e) => setBiographicalInformation(e.target.value)}
       />
-      <button onClick={handleSave}>Save</button>
+      <button onClick={handleUpdate}>Save</button>
       <button onClick={onClose}>Cancel</button>
     </div>
   );
 }
 
-export default AddMemberModal;
+export default UpdateMemberModal;

@@ -10,63 +10,24 @@ import Login from "./components/Login";
 import FamilyTree from "./components/FamilyTree";
 
 function FlashMessage({ message, duration = 3000, onTimeout }) {
+  const [visible, setVisible] = useState(true);
+
   useEffect(() => {
     const timer = setTimeout(() => {
+      setVisible(false);
       onTimeout();
     }, duration);
 
     return () => clearTimeout(timer);
   }, [duration, onTimeout]);
 
-  return <div className="flash-message">{message}</div>;
+  return visible ? <div className="flash-message">{message}</div> : null;
 }
 
 function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
-  const [navigateToFamilyTree, setNavigateToFamilyTree] = useState(false);
-
-  useEffect(() => {
-    // Check if the user is already logged in (by verifying the token)
-    const verifyToken = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
-
-      try {
-        const response = await fetch("http://localhost:8000/auth/jwt/verify/", {
-          method: "POST", // Use POST method for token verification
-          headers: {
-            "Content-Type": "application/json",
-            // Include any necessary authentication headers if required
-          },
-          body: JSON.stringify({
-            token:
-              "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ0b2tlbl90eXBlIjoiYWNjZXNzIiwiZXhwIjoxNzEwNDI5NTI5LCJpYXQiOjE3MTA0MjIzMjksImp0aSI6IjAyZjBlMGM4MzI4ZTQzOWU5ZmNkZmI5MzAzY2Y2MDAzIiwidXNlcl9pZCI6MX0.tn-74kUQD0gex5CPhn5l3C4N_J_idtOYnD6HYgzzesM", // Include the JWT token to verify
-          }),
-        })
-          .then((response) => {
-            if (response.ok) {
-              // Token is valid
-              console.log("Token is valid");
-            } else {
-              // Token is not valid
-              console.error("Token is not valid");
-            }
-          })
-          .catch((error) => {
-            console.error("Error:", error);
-          });
-
-        if (response.ok) {
-          setIsLoggedIn(true);
-        }
-      } catch (error) {
-        console.error("Error:", error);
-      }
-    };
-
-    verifyToken();
-  }, []);
+  const [error, setError] = useState("");
 
   const handleLogin = async (email, password) => {
     try {
@@ -76,25 +37,36 @@ function App() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
-        redirect: "manual",
       });
+
       if (response.ok) {
         const data = await response.json();
-        localStorage.setItem("token", data.access_token); // Store the access token in local storage
+        console.log("Response data:", data); // Log the response data
+        const token = data.tokens.access;
+
+        if (!token) {
+          throw new Error("Token not found in response data");
+        }
+
+        // Log the token value before storing it
+        console.log("Token:", token);
+
+        localStorage.setItem("token", token);
         setIsLoggedIn(true);
         setSuccessMessage("Login successful");
-        setNavigateToFamilyTree(true);
       } else {
         throw new Error("Login failed");
       }
     } catch (error) {
       console.error("Error:", error);
-      setSuccessMessage("Login failed");
+      setError("Login failed");
     }
   };
 
-  const handleFlashMessageTimeout = () => {
+  const handleLogout = () => {
+    setIsLoggedIn(false);
     setSuccessMessage("");
+    setError("");
   };
 
   return (
@@ -102,23 +74,41 @@ function App() {
       <div className="App">
         <header className="App-header">
           <h1 className="header-title">Welcome to Family Tree App</h1>
+          {isLoggedIn && (
+            <button onClick={handleLogout} className="logout-btn">
+              Logout
+            </button>
+          )}
         </header>
         <main>
           {successMessage && (
             <FlashMessage
               message={successMessage}
               duration={3000}
-              onTimeout={handleFlashMessageTimeout}
+              onTimeout={() => setSuccessMessage("")}
             />
           )}
-          {navigateToFamilyTree && <Navigate to="/family-tree" />}
+          {error && (
+            <FlashMessage
+              message={error}
+              duration={3000}
+              onTimeout={() => setError("")}
+            />
+          )}
           <Routes>
-            <Route path="/" element={<Login onLogin={handleLogin} />} />
+            <Route
+              path="/"
+              element={
+                isLoggedIn ? (
+                  <Navigate to="/family-tree" />
+                ) : (
+                  <Login onLogin={handleLogin} />
+                )
+              }
+            />
             <Route
               path="/family-tree"
-              element={
-                isLoggedIn ? <FamilyTree /> : <Navigate to="/" replace={true} />
-              }
+              element={isLoggedIn ? <FamilyTree /> : <Navigate to="/" />}
             />
           </Routes>
         </main>

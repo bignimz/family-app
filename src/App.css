@@ -83,3 +83,87 @@ form button:hover {
   text-align: center;
   margin-bottom: 50px;
 }
+
+.member {
+  width: 400px;
+  margin: 1.5rem auto;
+  text-align: center;
+  padding: 2rem;
+  box-sizing: border-box;
+  box-shadow: 1px 0px 10px rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Modal Styles */
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #eeeeee;
+  padding: 20px 40px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.modal h2 {
+  margin-top: 0;
+}
+
+.modal label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.modal input[type="text"],
+.modal input[type="date"],
+.modal textarea {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.modal textarea {
+  height: 100px;
+}
+
+.modal button {
+  padding: 8px 16px;
+  margin-right: 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #007bff;
+  color: white;
+}
+
+.modal button:hover {
+  background-color: #0056b3;
+}
+
+.modal button:last-child {
+  margin-right: 0;
+  background-color: #dc3545;
+}
+
+.modal button:last-child:hover {
+  background-color: #bd2130;
+}
+
+.logout-btn {
+  background-color: #72637f;
+  color: #fff;
+  padding: 6px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+
+.logout-btn:hover {
+  background-color: #6a527e;
+}
